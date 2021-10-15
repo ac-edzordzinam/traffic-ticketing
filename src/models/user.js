@@ -37,7 +37,9 @@ const userSchema = new mongoose.Schema({
         }
     },
     carNumber:{
-        type:String
+        type:String,
+        unique : true,   
+        required: true
     },
     tokens : [{
         token:{
@@ -62,7 +64,16 @@ const userSchema = new mongoose.Schema({
      ref:'Ticket',
      localField:'_id',
      foreignField:'creator'
- })
+ },
+ {
+    ref:'User',
+    localField:'reciever',
+    foreignField:'carNumber' 
+ }
+ )
+//  userSchema.virtual('carNumber').get(function()
+
+
 
 userSchema.methods.toJSON  =  function (){
     const user = this

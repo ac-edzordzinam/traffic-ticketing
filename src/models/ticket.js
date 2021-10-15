@@ -18,6 +18,11 @@ const ticketSchema = new mongoose.Schema({
         },
         creator:{
             type:mongoose.Schema.Types.ObjectId,
+            // required: true,
+            ref: 'User'
+        },
+        reciever:{
+            type:String,
             required: true,
             ref: 'User'
         },

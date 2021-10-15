@@ -11,11 +11,15 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@sendgrid/mail": "^7.4.7",
+    "events": "^3.3.0",
     "jsonwebtoken": "^8.5.1",
     "multer": "^1.4.2",
     "sharp": "^0.28.3"
   },
   "devDependencies": {
-    "env-cmd": "^8.0.2"
+    "env-cmd": "^8.0.2",
+    "jest": "^27.2.1",
+    "supertest": "^6.1.6"
   }
 }

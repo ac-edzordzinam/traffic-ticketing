@@ -1,22 +1,33 @@
 const express = require('express')
 const Ticket = require('../models/ticket')
+const User = require('../models/user')
+const events = require('events')
 const auth = require('../middleware/auth')
+const responseGenerator = require('../middleware/responseGenerator')
 const router = new express.Router()
+const {sendTicketReferenceEmail} = require('../emails/account')
+
+
 
 //Create ticket
 router.post('/tickets',auth,async(req,res)=>{
     console.log(req.body)
-   // if(user.role !== 'police') return res.status(401).send('Unauthorized') 
+  
     const ticket =new Ticket({
           ...req.body,
-        creator:req.user._id
+        reciever:req.user.carNumber,
+       
      })
-   
+     
+     
     try{
     
          await ticket.save()
+         
+         sendTicketReferenceEmail(email,lname,reciever,id)
          res.status(201).send(ticket)
     }catch(e){
+        console.error(e.message)
         res.status(400).send(e)
 
     }
@@ -166,7 +177,7 @@ router.post('/tickets',auth,async(req,res)=>{
     })
 
     // Admin search/view all tickets
-    router.get('/ticketts',async(req,res)=>{ 
+    router.get('/tickets/admin',async(req,res)=>{ 
         const match = {} 
         const sort = {}
         if (req.query.completed) {
@@ -191,7 +202,7 @@ router.post('/tickets',auth,async(req,res)=>{
                 //          sort 
                 //      }
                 //  }).execPopulate() 
-              const tickets = await Ticket.find().limit().skip(1).sort()
+              const tickets = await Ticket.find().limit().skip().sort()
               
 
                res.send(tickets)
@@ -201,7 +212,7 @@ router.post('/tickets',auth,async(req,res)=>{
         
       })
 //Admin Search/ view a single ticket
-router.get('/ticketts/:id',async(req,res)=>{
+router.get('/tickets/admin/:id',async(req,res)=>{
     const _id= req.params.id
     try {
         
@@ -216,6 +227,66 @@ router.get('/ticketts/:id',async(req,res)=>{
    
 }) 
 
+// User Message
+router.post('/message/:id', auth, async(req, res)=> {
 
+    //var text = req.body.message;
+    const message = {
+        sender: req.user.firstname + ' ' + req.user.lastname,
+        message: req.body.message
+    };
+    //console.log("--->"+message);
+    Ticket.findOneAndUpdate({
+        ticketid: req.params.id
+    }, {
+        $push: {
+            "messages": message
+        },
+    }, function (err) {
+        if (err) {
+            var response = responseGenerator.generate(true, "Some error", 500, null);
+            res.send(response);
+        } else {
+            //console.log(result);
+            // eventEmitter.emit('User-Message', req.params.id);
+            var response = responseGenerator.generate(false, "Message Sent", 200, null);
+            res.send(response);
+        }
+    });
+});
+
+// Admin Message
+router.post('/admin/message/:id', auth,async (req, res) =>{
+
+    var data = {
+        user: req.body.username,
+        id: req.params.id
+    };
+    console.log(data);
+
+    var message = {
+        sender: "Admin",
+        message: req.body.message
+    };
+
+    Ticket.findOneAndUpdate({
+        ticketid: req.params.id
+    }, {
+        $push: {
+            "messages": message
+        },
+    }, function (err) {
+        if (err) {
+            var response = responseGenerator.generate(true, "Some error", 500, null);
+            res.send(response);
+        } else {
+            //console.log(result)
+            // eventEmitter.emit('Admin-Message', data);
+            var response = responseGenerator.generate(false, "Message Sent", 200, null);
+            console.log(response);
+            res.send(response);
+        }
+    });
+});
 
 module.exports = router
